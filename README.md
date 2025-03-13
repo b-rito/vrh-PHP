@@ -59,6 +59,7 @@ To allow any URL Path to be recognized in the event of rewrites or redirections 
          try_files $uri /index.php;
       }
       ```
+      - To save the configuration changes, press *ESC*,  type `:wq`, then *Enter*
 1. Apply changes and reload nginx 
    - Copy the new configuration back to the necessary directory
       ```bash
