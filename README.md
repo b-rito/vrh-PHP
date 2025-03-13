@@ -31,3 +31,50 @@ Vrh-php is a webpage of PHP that can be deployed in an Azure Web App, or web ser
      - `--location eastus2` (az account list-locations)
      - `--sku B1`
    - More information available on Azure CLI [az webapp up](https://learn.microsoft.com/en-us/cli/azure/webapp?view=azure-cli-latest#az-webapp-up)
+
+### Web App Configuration
+Once the Azure Web App is deployed and running, you may notice that only the default domain page works: `https://<default-domain>.net`
+
+To allow any URL Path to be recognized in the event of rewrites or redirections that may extent the 'RequestUri' similar to: `https://<default-domain>.net/helloworld` you can update the Web App.  
+
+> [!NOTE]
+> Persistent '/home' storage is needed via Environment Variable `WEBSITES_ENABLE_APP_SERVICE_STORAGE = true`  
+
+1. Connect to the Web App via SSH
+   - Login to Azure Portal and navigate to your deployed Azure Web App
+   - Expand 'Development Tools', click on 'SSH', and open the web-browser based SSH connection
+1. Update the Web App's Nginx configuration via `vi`
+   - From the `/home#` prompt copy the nginx configuration
+      ```bash
+      cp /etc/nginx/sites-enabled/default /home/default
+      ```
+   - Update the nginx configuration using the built-in editor
+      ```bash
+      vi /home/default
+      ```
+      - `vi` is an editor that uses two modes, either `Insert` or `Command`, target `Insert` by pressing the letter `i`
+      - Using arrow keys to navigate towards the `location /` section to modify it to look similar to
+      ```nginx
+      location / {
+         try_files $uri /index.php;
+      }
+      ```
+1. Apply changes and reload nginx 
+   - Copy the new configuration back to the necessary directory
+      ```bash
+      cp /home/default /etc/nginx/sites-enabled/default
+      ```
+   - Reload nginx to apply the changes without restarting the Web App
+      ```bash
+      service nginx reload
+      ```
+   - You should now see similar webpage presented when requesting any combination of URL Paths
+      - `https://<defaultdomain>.net/helloworld`
+      - `https://<defaultdomain>.net/this/longer/path`
+1. Optionally, you can persist this change on restarts of the Web App
+   - Navigate to the Azure Portal and go to your Web App
+   - Expand 'Settings', click on 'Configuration', and input a 'Startup Command'
+      ```bash
+      cp /home/default /etc/nginx/sites-enabled/default; service nginx reload
+      ```
+   - Once the command is entered, apply the change by 'Save'
